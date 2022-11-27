@@ -1,0 +1,34 @@
+namespace: /jfrog
+
+artifactory:
+  defines: runnable
+
+  metadata:
+    website: https://jfrog.com
+    name: Artifactory
+    icon: https://avatars.githubusercontent.com/u/499942?s=200&v=4
+    publisher: monk.io
+    description:  JFrog Artifactory is the single solution for housing and managing all the artifacts, binaries, packages, files, containers, and components for use throughout your software supply chain.
+    source: https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/
+
+  # volumes:
+  #   artifactory:
+  #     size: 200
+  #     kind: SSD
+  #     path: <- `${monk-volume-path}/jenkins`
+  #     backup:
+  #       rotation-days: 5
+  #       every: 1
+  #       kind: day
+  #       start-time: 03:00
+  #       start-day: MONDAY
+
+  containers:
+    artifactory:
+      paths:
+        - <- `${monk-volume-path}/jfrog/artifactory:/var/opt/jfrog/artifactory`
+      ports:
+        - 8081:8081
+        - 8082:8082
+      image: docker.bintray.io/jfrog/artifactory-oss
+      image-tag: latest
