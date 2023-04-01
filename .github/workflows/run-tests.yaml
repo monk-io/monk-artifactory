@@ -56,12 +56,22 @@ jobs:
         run: |
           monk ps --filter "${JOB}"
 
-      - name: Test - curl
+      - name: Test - curl 8081
         run: |
           set -x
           ENDPOINT=$(monk describe "${JOB}" 2>&1 | awk '/ENDPOINT/ {print $3}' | grep 8081)
+          echo "curl"
+          curl ${ENDPOINT}
+          echo "test - curl"
           curl ${ENDPOINT} | grep "/artifactory"
+
+      - name: Test - curl 8082
+        run: |
+          set -x
           ENDPOINT=$(monk describe "${JOB}" 2>&1 | awk '/ENDPOINT/ {print $3}' | grep 8082)
+          echo "curl"
+          curl ${ENDPOINT}
+          echo "test - curl"
           curl ${ENDPOINT} | grep "/ui/externals/single-spa"
 
       - name: Test - monk logs
