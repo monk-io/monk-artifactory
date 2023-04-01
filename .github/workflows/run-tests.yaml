@@ -1,0 +1,77 @@
+name: Run the tests
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  create-cluster:
+    uses: monk-io/monk-test-infra/.github/workflows/create_cluster.yml@main
+    secrets: inherit
+
+  run-tests:
+    needs: create-cluster
+    runs-on: ubuntu-latest
+    container:
+      image: gcr.io/monk-releases/monk-ci:latest
+      env:
+        GCP_SECRET: ${{ secrets.KIT_TESTING_GCP_SECRET }}
+        MONK_LOGIN: ${{ secrets.KIT_TESTING_MONK_USERNAME }}
+        MONK_PASS: ${{ secrets.KIT_TESTING_MONK_PASSWORD }}
+        MONK_CLI_NO_FANCY: "true"
+        MONK_CLI_NO_COLOR: "true"
+        MONK_SOCKET: "monkcode://${{needs.create-cluster.outputs.monkcode}}"
+        JOB: local/jfrog/artifactory
+
+    outputs:
+      monkcode: ${{needs.create-cluster.outputs.monkcode}}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies & setup monkd
+        run: |
+          apk add gawk curl
+          monk login --email "${MONK_LOGIN}" --password "${MONK_PASS}"
+
+      - name: Test - monk load
+        run: |
+          monk load MANIFEST
+
+      - name: Test - monk run
+        run: |
+          monk run --tag githubrunner "${JOB}"
+
+      - name: Test - monk describe
+        run: |
+          monk describe "${JOB}"
+
+      - name: Test - monk info
+        run: |
+          monk info "${JOB}"
+
+      - name: Test - monk ps
+        run: |
+          monk ps --filter "${JOB}"
+
+      - name: Test - curl
+        run: |
+          set -x
+          ENDPOINT=$(monk describe "${JOB}" 2>&1 | awk '/ENDPOINT/ {print $3}' | grep 8081)
+          curl ${ENDPOINT} | grep "/artifactory"
+          ENDPOINT=$(monk describe "${JOB}" 2>&1 | awk '/ENDPOINT/ {print $3}' | grep 8082)
+          curl ${ENDPOINT} | grep "/ui/externals/single-spa"
+
+      - name: Test - monk logs
+        run: |
+          monk logs "${JOB}"
+
+  destroy-cluster:
+    needs: run-tests
+    if: always()
+    uses: monk-io/monk-test-infra/.github/workflows/nuke_cluster.yml@main
+    secrets: inherit
+    with:
+      monkcode: ${{needs.run-tests.outputs.monkcode}}
