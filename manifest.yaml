@@ -1,35 +1,32 @@
-namespace: /jfrog
+---
+namespace: jfrog
 
 artifactory:
   defines: runnable
-
   metadata:
     website: https://jfrog.com
     name: Artifactory
     icon: https://avatars.githubusercontent.com/u/499942?s=200&v=4
     publisher: monk.io
-    description: Artifactory is a universal artifact repository manager that allows developers to manage and store various types of binary artifacts such as binaries, containers, and package dependencies. It acts as a central repository that stores and manages all artifacts, making it easy to manage and distribute them across teams and environments. Artifactory supports various package management systems, including Maven, Docker, Gradle, and NuGet, and provides features such as access control, security, and version control, ensuring that artifacts are managed and distributed securely and efficiently. Overall, Artifactory is an essential tool for organizations looking to streamline their software development process and ensure reliable and efficient artifact management.
+    description: |
+      Artifactory is a universal artifact repository manager that allows developers to manage and store various types of binary artifacts such as binaries, containers, and package dependencies.
+
+      It acts as a central repository that stores and manages all artifacts, making it easy to manage and distribute them across teams and environments.
+
+      Artifactory supports various package management systems, including Maven, Docker, Gradle, and NuGet, and provides features such as access control, security, and version control, ensuring that artifacts are managed and distributed securely and efficiently.
+
+      Overall, Artifactory is an essential tool for organizations looking to streamline their software development process and ensure reliable and efficient artifact management.
     source: https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/
     tags: artifactory, repository, artifacts, storage
-
-  # volumes:
-  #   artifactory:
-  #     size: 200
-  #     kind: SSD
-  #     path: <- `${monk-volume-path}/jenkins`
-  #     backup:
-  #       rotation-days: 5
-  #       every: 1
-  #       kind: day
-  #       start-time: 03:00
-  #       start-day: MONDAY
-
   containers:
     artifactory:
       paths:
         - <- `${monk-volume-path}/jfrog/artifactory:/var/opt/jfrog/artifactory`
-      ports:
-        - 8081:8081
-        - 8082:8082
       image: docker.bintray.io/jfrog/artifactory-oss
       image-tag: latest
+  services:
+    server:
+      container: artifactory
+      port: 8081
+      protocol: tcp
+      host-port: 8081
