@@ -17,7 +17,7 @@ artifactory:
 
       Overall, Artifactory is an essential tool for organizations looking to streamline their software development process and ensure reliable and efficient artifact management.
     source: https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/
-    tags: storage, artifacts, artifactory, repository
+    tags: repository, artifacts, storage, versioning, dependency, continuous-integration
   containers:
     artifactory:
       paths:
