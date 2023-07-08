@@ -1,11 +1,10 @@
-JFrog Artifactory meets Monk
-===
+# JFrog Artifactory meets Monk
 
 This repository contains Monk.io template to deploy JFrogs Artifactory system either locally or on cloud of your choice (AWS, GCP, Azure, Digital Ocean).
 
 - [JFrog Artifactory meets Monk](#jfrog-artifactory-meets-monk)
   - [Prerequisites](#prerequisites)
-    - [Make sure monkd is running.](#make-sure-monkd-is-running)
+  - [Make sure monkd is running](#make-sure-monkd-is-running)
     - [Clone Repository](#clone-repository)
     - [Load Template](#load-template)
     - [Verify if it's loaded correctly](#verify-if-its-loaded-correctly)
@@ -15,12 +14,13 @@ This repository contains Monk.io template to deploy JFrogs Artifactory system ei
   - [Persistency](#persistency)
 
 ## Prerequisites
+
 - [Install Monk](https://docs.monk.io/docs/get-monk)
 - [Register and Login Monk](https://docs.monk.io/docs/acc-and-auth)
 - [Add Cloud Provider](https://docs.monk.io/docs/cloud-provider)
 - [Add Instance](https://docs.monk.io/docs/multi-cloud)
 
-### Make sure monkd is running.
+## Make sure monkd is running
 
 ```bash
 foo@bar:~$ monk status
@@ -82,7 +82,6 @@ $ monk run jfrog/artifactory
 💡 Check monk help for more!
 ```
 
-
 ## Stop, remove and clean up workloads and templates
 
 ```bash
@@ -91,5 +90,6 @@ monk purge -x jfrog/artifactory
 ```
 
 ## Persistency
+
 If you're using any of the clouds available via Monk. You can use volume definition to spin a disk block device to make your Artifactory instance independent from the node it's running on.
 To do simply uncomment the `volume` block in `manifest.yaml`
