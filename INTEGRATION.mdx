@@ -1,0 +1,235 @@
+---
+title: JFrog Artifactory
+description: Ready-to-run JFrog Artifactory container template for universal artifact repository manager and DevOps platform.
+primary_category: devops
+tags: [artifactory, jfrog, artifact-repository, devops, template, runnable, package-management, binary-repository]
+integration_type: template
+hosting_models: [self-hosted]
+website_url: https://jfrog.com/artifactory/
+docs_url: https://www.jfrog.com/confluence/display/JFROG/JFrog+Artifactory
+publisher: monk.io
+---
+
+## Overview
+
+This template provides a production‑ready JFrog Artifactory instance as a Monk runnable. You can:
+
+- Run it directly to get a managed universal artifact repository
+- Inherit it in your own CI/CD infrastructure to manage binaries, containers, and packages
+
+JFrog Artifactory is the universal artifact repository manager. It supports all major package formats and integrates with your CI/CD tools to manage the full lifecycle of your binaries from development through production.
+
+## What this template manages
+
+- Artifactory container (OSS, Pro, or Enterprise editions, configurable tag)
+- PostgreSQL database container (for metadata storage)
+- Network service on port 8082
+- Persistent volumes for artifacts and database
+- Web UI and REST API
+- Repository management and Docker registry
+- Security and access control
+
+## Quick start (run directly)
+
+1) Load templates
+
+```bash
+monk load MANIFEST
+```
+
+2) Run Artifactory with defaults
+
+```bash
+monk run artifactory/artifactory
+```
+
+3) Customize credentials (recommended via inheritance)
+
+Running directly uses the defaults defined in this template's `variables`. Secrets added with `monk secrets add` will not affect this runnable unless you inherit it and reference those secrets.
+
+- Preferred: inherit and replace variables with `secret("...")` as shown below.
+- Alternative: fork/clone and edit the `variables` in the manifest, then `monk load MANIFEST` and run.
+
+Once started, access Artifactory at `http://localhost:8082` using the configured credentials.
+
+Default credentials: `admin` / `password` (change immediately!)
+
+## Configuration
+
+Key variables you can customize in this template:
+
+```yaml
+variables:
+  # Artifactory
+  artifactory-image-tag: "latest"     # Artifactory image tag
+  artifactory-port: "8082"            # web UI and API port
+  artifactory-edition: "oss"          # oss, pro, or enterprise
+  
+  # Database
+  db-type: "postgresql"               # database type
+  postgres-password: "..."            # PostgreSQL password
+  postgres-user: "artifactory"        # database user
+  postgres-db: "artifactory"          # database name
+  
+  # Storage
+  max-heap-size: "2g"                 # JVM max heap
+```
+
+Data is persisted under `${monk-volume-path}/artifactory` on the host. PostgreSQL data is stored under `${monk-volume-path}/postgres`.
+
+## Use by inheritance (recommended for DevOps)
+
+Inherit the Artifactory runnable in your DevOps infrastructure and declare a connection. Example:
+
+```yaml
+namespace: devops
+artifacts:
+  defines: runnable
+  inherits: artifactory/artifactory
+  variables:
+    postgres-password: <- secret("artifactory-db-password")
+ci:
+  defines: runnable
+  containers:
+    ci:
+      image: myorg/ci-runner
+      environment:
+        - ARTIFACTORY_URL=http://artifacts:8082
+        - ARTIFACTORY_USER=<- secret("artifactory-user")
+        - ARTIFACTORY_PASSWORD=<- secret("artifactory-password")
+  connections:
+    repo:
+      runnable: artifacts
+      service: artifactory
+```
+
+Then set the secrets once and run your DevOps group:
+
+```bash
+monk secrets add -g artifactory-db-password="STRONG_PASSWORD"
+monk secrets add -g artifactory-user="ci-user"
+monk secrets add -g artifactory-password="STRONG_PASSWORD"
+monk run devops/ci
+```
+
+## Ports and connectivity
+
+- Service: Web UI/API on TCP port `8082`
+- From CI/CD tools, use `http://<host>:8082` for repository access
+- From other runnables in the same process group, use `connection-hostname("<connection-name>")` to resolve the Artifactory host.
+
+## Persistence and configuration
+
+- Artifactory data: `${monk-volume-path}/artifactory:/var/opt/jfrog/artifactory`
+- PostgreSQL data: `${monk-volume-path}/postgres:/var/lib/postgresql/data`
+- You can mount additional configuration files to customize Artifactory behavior.
+
+## Features
+
+- **Universal Repository**: Support for 30+ package types
+- **Docker Registry**: Private Docker image registry
+- **High Availability**: Clustering and replication (Pro/Enterprise)
+- **Security**: Vulnerability scanning (Xray integration)
+- **Access Control**: RBAC, LDAP, SSO integration
+- **Replication**: Multi-site replication
+- **Build Integration**: Jenkins, Bamboo, TeamCity, Azure DevOps
+- **REST API**: Comprehensive automation API
+
+## Supported Package Types
+
+- **Containers**: Docker, Helm, OCI
+- **Java**: Maven, Gradle, Ivy, SBT
+- **JavaScript**: npm, Bower, Yarn
+- **Python**: PyPI, Conda
+- **.NET**: NuGet
+- **.NET Core**: .NET CLI
+- **Ruby**: RubyGems
+- **Go**: Go modules
+- **PHP**: Composer
+- **Rust**: Cargo
+- **C/C++**: Conan
+- **And 20+ more...**
+
+## Repository Types
+
+- **Local**: Host internal artifacts
+- **Remote**: Proxy external repositories (Maven Central, npm, etc.)
+- **Virtual**: Aggregate multiple repositories
+
+## Docker Registry
+
+Use Artifactory as Docker registry:
+
+```bash
+# Login
+docker login artifactory.example.com
+
+# Tag image
+docker tag myimage:latest artifactory.example.com/docker-local/myimage:latest
+
+# Push
+docker push artifactory.example.com/docker-local/myimage:latest
+
+# Pull
+docker pull artifactory.example.com/docker-local/myimage:latest
+```
+
+## Maven Integration
+
+Configure Maven in `~/.m2/settings.xml`:
+
+```xml
+<mirrors>
+  <mirror>
+    <id>artifactory</id>
+    <mirrorOf>*</mirrorOf>
+    <url>http://localhost:8082/artifactory/libs-release</url>
+  </mirror>
+</mirrors>
+```
+
+## npm Integration
+
+```bash
+# Set registry
+npm config set registry http://localhost:8082/artifactory/api/npm/npm-virtual/
+
+# Authenticate
+npm login --registry=http://localhost:8082/artifactory/api/npm/npm-virtual/
+```
+
+## Use cases
+
+Artifactory excels at:
+- Universal artifact management
+- Private Docker registry
+- Dependency caching and proxying
+- Build artifact versioning
+- Security and compliance
+- Multi-site distribution
+- CI/CD pipeline integration
+
+
+## Related templates
+
+- High‑availability setup: see the Artifactory HA template for clustered deployment.
+- Alternative artifact repository: see the `nexus/` template for Sonatype Nexus.
+- Integrate with CI/CD: combine with Jenkins, GitLab CI, or GitHub Actions templates.
+
+## Troubleshooting
+
+- Access Artifactory UI at `http://localhost:8082`
+- Check system health: Administration → System Health
+- View logs: Administration → System Logs
+- Check container logs:
+
+```bash
+monk logs -l 500 -f artifactory/artifactory
+```
+
+- If Artifactory startup is slow, note that it requires 2-5 minutes on first launch
+- If you experience memory issues, increase the `max-heap-size` variable
+- If database connection fails, verify PostgreSQL is running and credentials are correct
+- For Docker registry issues, ensure proper reverse proxy configuration with SSL
+- Monitor disk space for artifact storage and use cleanup policies to manage it
+- Ensure the host volumes are writable by the container user
